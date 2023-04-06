@@ -4,6 +4,7 @@ mod gradient;
 mod wallpaper;
 
 use std::{
+    env,
     process::{exit, Command},
     rc::Rc,
     time::Duration,
@@ -20,14 +21,18 @@ fn change_wallpaper(config: Rc<Config>) {
     let command = if let Some(de) = &config.desktop_env {
         de.get_command()
     } else {
-        String::from(config.desktop_command.as_ref().expect("Invalid config: missing 'desktop_command'"))
+        String::from(
+            config
+                .desktop_command
+                .as_ref()
+                .expect("Invalid config: missing 'desktop_command'"),
+        )
     };
-    let (exec, args) = if let Some((exec, args)) = command
-        .split_once(" ") {
-            (exec, args)
-        } else {
-            (command.as_str(), "")
-        };
+    let (exec, args) = if let Some((exec, args)) = command.split_once(" ") {
+        (exec, args)
+    } else {
+        (command.as_str(), "")
+    };
     Command::new(exec)
         .args(args.split(" "))
         .output()
@@ -35,8 +40,20 @@ fn change_wallpaper(config: Rc<Config>) {
 }
 
 fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>) {
-    let time = Local::now();
-    let img = wallpaper.gen_wallpaper(time.hour() as u8, time.minute() as u8);
+    let args: Vec<String> = env::args().collect();
+    let hour;
+    let minute;
+    if args.len() < 3 {
+        let time = Local::now();
+        hour = time.hour() as u8;
+        minute = time.minute() as u8;
+    } else {
+        hour = u8::from_str_radix(args[1].as_str(), 10)
+            .expect(&format!("{} is not an integer", args[1]));
+        minute = u8::from_str_radix(args[2].as_str(), 10)
+            .expect(&format!("{} is not an integer", args[2]));
+    }
+    let img = wallpaper.gen_wallpaper(hour, minute);
     img.save(&config.save_path).unwrap();
     change_wallpaper(Rc::clone(config));
 }
@@ -61,7 +78,7 @@ fn main() {
             main_loop(&mut wallpaper, &config);
             std::thread::sleep(Duration::from_secs(config.update_mins * 60));
         }
-    } else{
+    } else {
         main_loop(&mut wallpaper, &config);
     }
 }
