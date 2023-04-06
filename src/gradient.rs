@@ -59,7 +59,7 @@ impl Gradient {
 
     pub fn update(&mut self, hour: u8, minute: u8) {
         let time = hour as f32 + (minute as f32 / 60.);
-        let colors_rgb = if time <= self.config.sunset_start || time >= self.config.sunset_end {
+        let colors_rgb = if time <= self.config.sunrise_start || time >= self.config.sunset_end {
             NIGHT_COLORS
         } else if time >= self.config.sunrise_end && time <= self.config.sunset_start {
             DAY_COLORS
