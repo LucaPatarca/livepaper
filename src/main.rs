@@ -20,11 +20,14 @@ fn change_wallpaper(config: Rc<Config>) {
     let command = if let Some(de) = &config.desktop_env {
         de.get_command()
     } else {
-        String::from(config.desktop_command.as_ref().expect("Invalid config"))
+        String::from(config.desktop_command.as_ref().expect("Invalid config: missing 'desktop_command'"))
     };
-    let (exec, args) = command
-        .split_once(" ")
-        .expect("Command should be a valid shell command");
+    let (exec, args) = if let Some((exec, args)) = command
+        .split_once(" ") {
+            (exec, args)
+        } else {
+            (command.as_str(), "")
+        };
     Command::new(exec)
         .args(args.split(" "))
         .output()
