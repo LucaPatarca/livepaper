@@ -2,44 +2,24 @@ mod config;
 mod consts;
 mod gradient;
 mod wallpaper;
+mod command;
 
 use std::{
     env,
-    process::{exit, Command},
+    process::exit,
     rc::Rc,
     time::Duration,
 };
 
 use chrono::{Local, Timelike};
+use command::CommandRunner;
 use config::Config;
 use wallpaper::Wallpaper;
 
 const APP_NAME: &str = "circadian_wallpaper";
 const CONFIG_NAME: &str = "config";
 
-fn change_wallpaper(config: Rc<Config>) {
-    let command = if let Some(de) = &config.desktop_env {
-        de.get_command()
-    } else {
-        String::from(
-            config
-                .desktop_command
-                .as_ref()
-                .expect("Invalid config: missing 'desktop_command'"),
-        )
-    };
-    let (exec, args) = if let Some((exec, args)) = command.split_once(" ") {
-        (exec, args)
-    } else {
-        (command.as_str(), "")
-    };
-    Command::new(exec)
-        .args(args.split(" "))
-        .output()
-        .expect("Cannot run command to change background");
-}
-
-fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>) {
+fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>, cmd_runner: &CommandRunner) {
     let args: Vec<String> = env::args().collect();
     let hour;
     let minute;
@@ -55,7 +35,7 @@ fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>) {
     }
     let img = wallpaper.gen_wallpaper(hour, minute);
     img.save(&config.save_path).unwrap();
-    change_wallpaper(Rc::clone(config));
+    cmd_runner.change_wallpaper();
 }
 
 fn main() {
@@ -73,12 +53,13 @@ fn main() {
     }
     let config = Rc::new(config);
     let mut wallpaper = Wallpaper::new(Rc::clone(&config));
+    let cmd_runner = CommandRunner::new(Rc::clone(&config));
     if config.exec_loop {
         loop {
-            main_loop(&mut wallpaper, &config);
+            main_loop(&mut wallpaper, &config, &cmd_runner);
             std::thread::sleep(Duration::from_secs(config.update_mins * 60));
         }
     } else {
-        main_loop(&mut wallpaper, &config);
+        main_loop(&mut wallpaper, &config, &cmd_runner);
     }
 }
