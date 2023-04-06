@@ -24,7 +24,12 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        let save_path = if let Ok(user_home) = env::var("HOME") {
+        let save_path = if env::consts::OS == "windows" {
+            format!(
+                "{}\\wallpaper.png",
+                env::var("USERPROFILE").unwrap_or("C:".to_string())
+            )
+        } else if let Ok(user_home) = env::var("HOME") {
             format!("{}/.local/share/backgrounds/wallpaper.png", user_home)
         } else {
             String::from("/tmp/wallpaper.png")
@@ -52,10 +57,13 @@ impl Config {
     }
 
     pub fn get_desktop_env(&self) -> String {
-        self.desktop_env.as_ref().unwrap_or(
-            &env::var("XDG_CURRENT_DESKTOP")
-                .unwrap_or_default()
-                .to_lowercase(),
-        ).to_owned()
+        self.desktop_env
+            .as_ref()
+            .unwrap_or(
+                &env::var("XDG_CURRENT_DESKTOP")
+                    .unwrap_or_default()
+                    .to_lowercase(),
+            )
+            .to_owned()
     }
 }
