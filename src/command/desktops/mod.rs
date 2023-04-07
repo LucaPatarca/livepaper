@@ -35,7 +35,7 @@ pub fn get_desktop(config: Rc<Config>) -> Box<dyn Desktop> {
             .get_desktop_env();
         match name.as_str() {
             "hyprland" => Box::new(Hyprland::new(config)),
-            "gnome" => Box::new(Gnome::new(config)),
+            "gnome" | "ubuntu:gnome" => Box::new(Gnome::new(config)),
             &_ => panic!("Invalid desktop environment set"),
         }
     }
