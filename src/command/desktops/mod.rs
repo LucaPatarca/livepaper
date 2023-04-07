@@ -1,21 +1,35 @@
-use self::{custom::Custom, gnome::Gnome, hyprland::Hyprland, windows::Windows};
+use self::custom::Custom;
 use crate::config::Config;
-use std::{rc::Rc, env};
+use std::rc::Rc;
 
 mod custom;
-mod gnome;
-mod hyprland;
-mod windows;
+#[cfg(unix)] mod gnome;
+#[cfg(unix)] mod hyprland;
+mod utils;
+
+#[cfg(windows)] mod windows;
 
 pub trait Desktop {
-    fn get_commands(&self) -> Vec<String>;
+    fn run(&self) -> Result<(), String>;
 }
 
+#[cfg(windows)]
 pub fn get_desktop(config: Rc<Config>) -> Box<dyn Desktop> {
+    use self::windows::Windows;
+
     if let Some(command) = &config.desktop_command {
         Box::new(Custom::new(command.to_string()))
-    } else if env::consts::OS == "windows" {
+    } else {
         Box::new(Windows::new(config))
+    }
+}
+
+#[cfg(unix)]
+pub fn get_desktop(config: Rc<Config>) -> Box<dyn Desktop> {
+    use self::{hyprland::Hyprland, gnome::Gnome};
+
+    if let Some(command) = &config.desktop_command {
+        Box::new(Custom::new(command.to_string()))
     } else {
         let name = config
             .get_desktop_env();

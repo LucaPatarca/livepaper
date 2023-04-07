@@ -1,4 +1,4 @@
-use super::Desktop;
+use super::{Desktop, utils::run_command};
 
 pub struct Custom {
     command: String,
@@ -11,7 +11,7 @@ impl Custom {
 }
 
 impl Desktop for Custom {
-    fn get_commands(&self) -> Vec<String> {
-        vec![self.command.clone()]
+    fn run(&self) -> Result<(), String> {
+        run_command(self.command.clone())
     }
 }

@@ -1,4 +1,4 @@
-use super::Desktop;
+use super::{Desktop, utils::run_command};
 use crate::config::Config;
 use serde_derive::Deserialize;
 use std::{process::Command, rc::Rc};
@@ -21,9 +21,7 @@ impl Hyprland {
         ];
         Self { commands, config }
     }
-}
 
-impl Desktop for Hyprland {
     fn get_commands(&self) -> Vec<String> {
         let output = Command::new("hyprctl")
             .args(["monitors", "-j"])
@@ -43,5 +41,13 @@ impl Desktop for Hyprland {
             ));
         }
         commands
+    }
+}
+
+impl Desktop for Hyprland {
+    fn run(&self) -> Result<(), String> {
+        Ok(for command in self.get_commands(){
+            run_command(command)?
+        })
     }
 }

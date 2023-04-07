@@ -2,35 +2,31 @@ use std::rc::Rc;
 use crate::config::Config;
 use super::Desktop;
 
-const PS_CLASS: &'static str = "using System.Runtime.InteropServices;\
-public class Wallpaper\
-{\
-  public const int SetDesktopWallpaper = 20;\
-  public const int UpdateIniFile = 0x01;\
-  public const int SendWinIniChange = 0x02;\
-  [DllImport(\"user32.dll\", SetLastError = true, CharSet = CharSet.Auto)]\
-  private static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);\
-  public static void SetWallpaper(string path)\
-  {\
-    SystemParametersInfo(SetDesktopWallpaper, 0, path, UpdateIniFile | SendWinIniChange);\
-  }\
-}";
+extern crate winapi;
+use winapi::ctypes::c_void;
+use winapi::um::winuser::{SystemParametersInfoA, SPIF_UPDATEINIFILE, SPI_SETDESKWALLPAPER};
+use std::ffi::CString;
 
 pub struct Windows {
-    commands: Vec<String>
+    path: String
 }
 
 impl Windows {
     pub fn new(config: Rc<Config>) -> Self {
-        Self {commands: vec![
-            format!("Add-Type '{}'", PS_CLASS),
-            format!("[Wallpaper]::SetWallpaper(\"{}\")", config.save_path)
-        ]}
+        Self {path: config.save_path.clone()}
     }
 }
 
 impl Desktop for Windows {
-    fn get_commands(&self) -> Vec<String> {
-        self.commands.clone()
+    fn run(&self) -> Result<(), String> {
+        let image_path = CString::new(self.path.as_str()).unwrap();
+        unsafe {
+            SystemParametersInfoA(
+                SPI_SETDESKWALLPAPER,
+                0,
+                image_path.as_ptr() as *mut c_void,
+                SPIF_UPDATEINIFILE,
+            );
+        }
     }
 }

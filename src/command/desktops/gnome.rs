@@ -1,4 +1,4 @@
-use super::Desktop;
+use super::{Desktop, utils::run_command};
 use crate::config::Config;
 use std::rc::Rc;
 
@@ -23,7 +23,9 @@ impl Gnome {
 }
 
 impl Desktop for Gnome {
-    fn get_commands(&self) -> Vec<String> {
-        self.commands.clone()
+    fn run(&self) -> Result<(), String> {
+        Ok(for command in self.commands.iter() {
+            run_command(command.to_owned())?
+        })
     }
 }
