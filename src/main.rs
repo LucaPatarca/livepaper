@@ -2,40 +2,40 @@ mod config;
 mod consts;
 mod gradient;
 mod wallpaper;
+mod command;
 
 use std::{
-    process::{exit, Command},
+    env,
+    process::exit,
     rc::Rc,
     time::Duration,
 };
 
 use chrono::{Local, Timelike};
+use command::CommandRunner;
 use config::Config;
 use wallpaper::Wallpaper;
 
 const APP_NAME: &str = "circadian_wallpaper";
 const CONFIG_NAME: &str = "config";
 
-fn change_wallpaper(config: Rc<Config>) {
-    let command = if let Some(de) = &config.desktop_env {
-        de.get_command()
+fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>, cmd_runner: &CommandRunner) {
+    let args: Vec<String> = env::args().collect();
+    let hour;
+    let minute;
+    if args.len() < 3 {
+        let time = Local::now();
+        hour = time.hour() as u8;
+        minute = time.minute() as u8;
     } else {
-        String::from(config.desktop_command.as_ref().expect("Invalid config"))
-    };
-    let (exec, args) = command
-        .split_once(" ")
-        .expect("Command should be a valid shell command");
-    Command::new(exec)
-        .args(args.split(" "))
-        .output()
-        .expect("Cannot run command to change background");
-}
-
-fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>) {
-    let time = Local::now();
-    let img = wallpaper.gen_wallpaper(time.hour() as u8, time.minute() as u8);
+        hour = u8::from_str_radix(args[1].as_str(), 10)
+            .expect(&format!("{} is not an integer", args[1]));
+        minute = u8::from_str_radix(args[2].as_str(), 10)
+            .expect(&format!("{} is not an integer", args[2]));
+    }
+    let img = wallpaper.gen_wallpaper(hour, minute);
     img.save(&config.save_path).unwrap();
-    change_wallpaper(Rc::clone(config));
+    cmd_runner.change_wallpaper();
 }
 
 fn main() {
@@ -53,12 +53,13 @@ fn main() {
     }
     let config = Rc::new(config);
     let mut wallpaper = Wallpaper::new(Rc::clone(&config));
+    let cmd_runner = CommandRunner::new(Rc::clone(&config));
     if config.exec_loop {
         loop {
-            main_loop(&mut wallpaper, &config);
+            main_loop(&mut wallpaper, &config, &cmd_runner);
             std::thread::sleep(Duration::from_secs(config.update_mins * 60));
         }
-    } else{
-        main_loop(&mut wallpaper, &config);
+    } else {
+        main_loop(&mut wallpaper, &config, &cmd_runner);
     }
 }
