@@ -56,6 +56,7 @@ impl Config {
         true
     }
 
+    #[cfg(unix)]
     pub fn get_desktop_env(&self) -> String {
         self.desktop_env
             .as_ref()
