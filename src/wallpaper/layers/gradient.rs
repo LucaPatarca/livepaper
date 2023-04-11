@@ -104,6 +104,7 @@ impl Layer for Gradient {
             ),
             State::UNKNOWN => BLACK_GRADIENT,
         };
+        self.last_state = new_state;
         let mut colors: Vec<Color> = Vec::new();
         for c in colors_rgb {
             colors.push(Color::from_rgba8(c[0], c[1], c[2], 255));

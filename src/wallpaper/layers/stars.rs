@@ -58,13 +58,13 @@ impl Layer for Stars {
         let sre = self.config.sunrise_end;
         let sss = self.config.sunset_start;
         let sse = self.config.sunset_end;
-        let new_opacity = if time > sse || time < srs {
+        let new_opacity = if time > sse || time < srs { //notte
             1.
-        } else if time > sss {
+        } else if time > sss { //tramonto
             (time - sss) / (sse - sss)
-        } else if time < sre {
+        } else if time < sre { //alba
             (sre - time) / (sre - srs)
-        } else {
+        } else { //giorno
             0.
         };
         if new_opacity == self.opacity {

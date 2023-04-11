@@ -23,7 +23,7 @@ impl Wallpaper {
     pub fn gen_wallpaper(&mut self, hour: u8, minute: u8) -> Option<ImageBuffer<Rgba<u8>, Vec<u8>>> {
         let mut updated = false;
         for layer in self.layers.iter_mut() {
-            updated = updated || layer.update(hour, minute);
+            updated = layer.update(hour, minute) || updated;
         }
         if !updated {
             return None;
