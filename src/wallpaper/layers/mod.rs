@@ -1,29 +1,13 @@
-/*
- *
- * A layer is a trait and the Wallpaper struct contains a list of those
- *
- * Every layer has the functions:
- * update()
- * get_pixel(x,y)
- *
- * The layer list is loaded at startup based on configuration
- * 
- * On gen_wallpaper every layer is blended sequentially
- *
- *
-*/
-
 mod foreground;
 mod gradient;
 mod stars;
 
-use std::rc::Rc;
+use self::{foreground::Foreground, gradient::Gradient, stars::Stars};
 use crate::config::Config;
-
-use self::{gradient::Gradient, foreground::Foreground, stars::Stars};
+use std::rc::Rc;
 
 pub trait Layer {
-    fn update(&mut self, hour: u8, minute: u8);
+    fn update(&mut self, hour: u8, minute: u8) -> bool;
     fn get_pixel(&self, x: u32, y: u32) -> image::Rgba<u8>;
 }
 

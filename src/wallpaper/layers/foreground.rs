@@ -1,10 +1,7 @@
-use std::rc::Rc;
-
-use image::{io::Reader, ImageBuffer, Rgba};
-
-use crate::config::Config;
-
 use super::Layer;
+use crate::config::Config;
+use image::{io::Reader, ImageBuffer, Rgba};
+use std::rc::Rc;
 
 pub struct Foreground {
     buffer: ImageBuffer<Rgba<u8>, Vec<u8>>,
@@ -31,8 +28,9 @@ impl Foreground {
     }
 }
 
-impl Layer for Foreground{
-    fn update(&mut self, _hour: u8, _minute: u8) {
+impl Layer for Foreground {
+    fn update(&mut self, _hour: u8, _minute: u8) -> bool {
+        false
     }
 
     fn get_pixel(&self, x: u32, y: u32) -> image::Rgba<u8> {

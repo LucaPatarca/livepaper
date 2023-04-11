@@ -20,27 +20,20 @@ impl Wallpaper {
         }
     }
 
-    pub fn gen_wallpaper(&mut self, hour: u8, minute: u8) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    pub fn gen_wallpaper(&mut self, hour: u8, minute: u8) -> Option<ImageBuffer<Rgba<u8>, Vec<u8>>> {
+        let mut updated = false;
         for layer in self.layers.iter_mut() {
-            layer.update(hour, minute);
+            updated = updated || layer.update(hour, minute);
+        }
+        if !updated {
+            return None;
         }
         let mut img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::new(self.config.frame_widht, self.config.frame_height);
         for (x, y, pixel) in img.enumerate_pixels_mut() {
             for layer in self.layers.iter(){
                 pixel.blend(&layer.get_pixel(x, y));
             }
-            // let mut grad_pixel = if stars.contains(&(x,y)) {
-                // let b = rng.gen_range(100..255);
-                // Rgba::from([b, b, b, 0xFF])
-            // } else {
-                // self.gradient.get_pixel(y)
-            // };
-            // if let Some(foreground) = &self.foreground {
-                // let fg_pixel = foreground.get_pixel(x, y);
-                // grad_pixel.blend(fg_pixel);
-            // }
-            // *pixel = grad_pixel;
         }
-        img
+        Some(img)
     }
 }

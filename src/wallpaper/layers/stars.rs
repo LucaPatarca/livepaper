@@ -1,9 +1,8 @@
+use super::Layer;
 use crate::config::Config;
 use image::{Pixel, Rgba};
 use rand::Rng;
 use std::rc::Rc;
-
-use super::Layer;
 
 struct Star {
     x: u32,
@@ -53,20 +52,26 @@ impl Stars {
 }
 
 impl Layer for Stars {
-    fn update(&mut self, hour: u8, minute: u8) {
+    fn update(&mut self, hour: u8, minute: u8) -> bool {
         let time: f32 = (hour as f32) + ((minute as f32) / 60.);
         let srs = self.config.sunrise_start;
         let sre = self.config.sunrise_end;
         let sss = self.config.sunset_start;
         let sse = self.config.sunset_end;
-        if time > sse || time < srs {
-            self.opacity = 1.;
-        }else if time > sss {
-            self.opacity = (time - sss) / (sse - sss);
-        } else if time < sre{
-            self.opacity = (sre - time) / (sre - srs);
-        }else{
-            self.opacity = 0.;
+        let new_opacity = if time > sse || time < srs {
+            1.
+        } else if time > sss {
+            (time - sss) / (sse - sss)
+        } else if time < sre {
+            (sre - time) / (sre - srs)
+        } else {
+            0.
+        };
+        if new_opacity == self.opacity {
+            false
+        } else {
+            self.opacity = new_opacity;
+            true
         }
     }
 

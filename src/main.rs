@@ -1,18 +1,12 @@
+mod command;
 mod config;
 mod consts;
 mod wallpaper;
-mod command;
-
-use std::{
-    env,
-    process::exit,
-    rc::Rc,
-    time::Duration,
-};
 
 use chrono::{Local, Timelike};
 use command::CommandRunner;
 use config::Config;
+use std::{env, process::exit, rc::Rc, time::Duration};
 use wallpaper::Wallpaper;
 
 const APP_NAME: &str = "circadian_wallpaper";
@@ -33,8 +27,13 @@ fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>, cmd_runner: &Comman
             .expect(&format!("{} is not an integer", args[2]));
     }
     let img = wallpaper.gen_wallpaper(hour, minute);
-    img.save(&config.save_path).unwrap();
-    cmd_runner.change_wallpaper();
+    match img {
+        Some(img) => {
+            img.save(&config.save_path).unwrap();
+            cmd_runner.change_wallpaper();
+        }
+        None => {}
+    }
 }
 
 fn main() {
