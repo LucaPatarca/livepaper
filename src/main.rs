@@ -1,6 +1,5 @@
 mod config;
 mod consts;
-mod gradient;
 mod wallpaper;
 mod command;
 

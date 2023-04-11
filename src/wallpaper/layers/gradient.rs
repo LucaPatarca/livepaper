@@ -1,9 +1,9 @@
 use std::rc::Rc;
-
 use colorgrad::Color;
-
 use crate::config::Config;
 use crate::consts::*;
+
+use super::Layer;
 
 pub struct Gradient {
     config: Rc<Config>,
@@ -57,7 +57,11 @@ impl Gradient {
         return blended_colors;
     }
 
-    pub fn update(&mut self, hour: u8, minute: u8) {
+}
+
+impl Layer for Gradient{
+
+    fn update(&mut self, hour: u8, minute: u8) {
         let time = hour as f32 + (minute as f32 / 60.);
         let colors_rgb = if time <= self.config.sunrise_start || time >= self.config.sunset_end {
             NIGHT_COLORS
@@ -93,7 +97,7 @@ impl Gradient {
             .unwrap());
     }
 
-    pub fn get_pixel(&self, y: u32) -> image::Rgba<u8> {
+    fn get_pixel(&self, _x: u32, y: u32) -> image::Rgba<u8> {
         if let Some(grad) = &self.gradient{
             let grad_pos = (y as f64) / (self.config.frame_height as f64);
             let grad_rgba = grad.at(grad_pos).to_rgba8();
