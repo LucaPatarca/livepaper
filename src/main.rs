@@ -1,44 +1,33 @@
+mod command;
 mod config;
 mod consts;
-mod gradient;
 mod wallpaper;
-mod command;
-
-use std::{
-    env,
-    process::exit,
-    rc::Rc,
-    time::Duration,
-};
 
 use chrono::{Local, Timelike};
 use command::CommandRunner;
-use config::Config;
+use std::{process::exit, rc::Rc, time::Duration};
 use wallpaper::Wallpaper;
+use clap::Parser;
 
+//TODO get from cargo
 const APP_NAME: &str = "circadian_wallpaper";
 const CONFIG_NAME: &str = "config";
 
-fn main_loop(wallpaper: &mut Wallpaper, config: &Rc<Config>, cmd_runner: &CommandRunner) {
-    let args: Vec<String> = env::args().collect();
-    let hour;
-    let minute;
-    if args.len() < 3 {
-        let time = Local::now();
-        hour = time.hour() as u8;
-        minute = time.minute() as u8;
-    } else {
-        hour = u8::from_str_radix(args[1].as_str(), 10)
-            .expect(&format!("{} is not an integer", args[1]));
-        minute = u8::from_str_radix(args[2].as_str(), 10)
-            .expect(&format!("{} is not an integer", args[2]));
-    }
-    let img = wallpaper.gen_wallpaper(hour, minute);
-    img.save(&config.save_path).unwrap();
-    cmd_runner.change_wallpaper();
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg()]
+    hour: Option<u8>,
+
+    #[arg()]
+    minute: Option<u8>,
+
+    #[arg(long)]
+    gen_all: Option<String>,
 }
 
 fn main() {
+    let args = Args::parse();
     let config: config::Config =
         confy::load(APP_NAME, Some(CONFIG_NAME)).expect("Cannot load config");
     if !config.is_valid() {
@@ -51,15 +40,50 @@ fn main() {
         );
         exit(1);
     }
+    let time = Local::now();
+    let mut hour = time.hour() as u8;
+    let mut minute = time.minute() as u8;
     let config = Rc::new(config);
     let mut wallpaper = Wallpaper::new(Rc::clone(&config));
     let cmd_runner = CommandRunner::new(Rc::clone(&config));
-    if config.exec_loop {
+    if let Some(path) = args.gen_all {
+        for h in 0..24 {
+            for m in (0..60).step_by(5){
+                let img = wallpaper.gen_wallpaper(h, m);
+                match img {
+                    Some(img) => {
+                        img.save(format!("{}/{:0>2}-{:0>2}.png", path, h, m)).unwrap();
+                    }
+                    None => {}
+                }
+            }
+        }
+    } else if config.exec_loop {
         loop {
-            main_loop(&mut wallpaper, &config, &cmd_runner);
+            let img = wallpaper.gen_wallpaper(hour, minute);
+            match img {
+                Some(img) => {
+                    img.save(&config.save_path).unwrap();
+                    cmd_runner.change_wallpaper();
+                }
+                None => {}
+            }
             std::thread::sleep(Duration::from_secs(config.update_mins * 60));
         }
     } else {
-        main_loop(&mut wallpaper, &config, &cmd_runner);
+        if let Some(arg_hour) = args.hour {
+            hour = arg_hour;
+        }
+        if let Some(arg_min) = args.minute {
+            minute = arg_min;
+        }
+        let img = wallpaper.gen_wallpaper(hour, minute);
+        match img {
+            Some(img) => {
+                img.save(&config.save_path).unwrap();
+                cmd_runner.change_wallpaper();
+            }
+            None => {}
+        }
     }
 }

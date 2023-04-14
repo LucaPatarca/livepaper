@@ -1,13 +1,22 @@
-use std::rc::Rc;
-
-use colorgrad::Color;
-
+use super::Layer;
 use crate::config::Config;
 use crate::consts::*;
+use colorgrad::Color;
+use std::rc::Rc;
+
+#[derive(PartialEq)]
+enum State {
+    UNKNOWN,
+    NIGHT,
+    SUNRISE,
+    DAY,
+    SUNSET,
+}
 
 pub struct Gradient {
     config: Rc<Config>,
     gradient: Option<colorgrad::Gradient>,
+    last_state: State,
 }
 
 impl Gradient {
@@ -15,6 +24,7 @@ impl Gradient {
         Gradient {
             config,
             gradient: None,
+            last_state: State::UNKNOWN,
         }
     }
 
@@ -56,50 +66,66 @@ impl Gradient {
         }
         return blended_colors;
     }
+}
 
-    pub fn update(&mut self, hour: u8, minute: u8) {
+impl Layer for Gradient {
+    fn update(&mut self, hour: u8, minute: u8) -> bool {
         let time = hour as f32 + (minute as f32 / 60.);
-        let colors_rgb = if time <= self.config.sunrise_start || time >= self.config.sunset_end {
-            NIGHT_COLORS
+        let new_state = if time <= self.config.sunrise_start || time >= self.config.sunset_end {
+            State::NIGHT
         } else if time >= self.config.sunrise_end && time <= self.config.sunset_start {
-            DAY_COLORS
+            State::DAY
         } else if time > self.config.sunrise_start && time < self.config.sunrise_end {
-            Self::blend_gradients(
+            State::SUNRISE
+        } else if time > self.config.sunset_start && time < self.config.sunset_end {
+            State::SUNSET
+        } else {
+            State::UNKNOWN
+        };
+        if new_state == self.last_state && (new_state == State::DAY || new_state == State::NIGHT) {
+            return false;
+        }
+        let colors_rgb = match new_state {
+            State::NIGHT => NIGHT_COLORS,
+            State::DAY => DAY_COLORS,
+            State::SUNRISE => Self::blend_gradients(
                 time,
                 self.config.sunrise_start,
                 self.config.sunrise_end,
                 SUNRISE_COLORS,
                 DAY_COLORS,
-            )
-        } else if time > self.config.sunset_start && time < self.config.sunset_end {
-            Self::blend_gradients(
+            ),
+            State::SUNSET => Self::blend_gradients(
                 time,
                 self.config.sunset_start,
                 self.config.sunset_end,
                 SUNSET_COLORS,
                 NIGHT_COLORS,
-            )
-        } else{
-            BLACK_GRADIENT
+            ),
+            State::UNKNOWN => BLACK_GRADIENT,
         };
+        self.last_state = new_state;
         let mut colors: Vec<Color> = Vec::new();
         for c in colors_rgb {
             colors.push(Color::from_rgba8(c[0], c[1], c[2], 255));
         }
-        self.gradient = Some(colorgrad::CustomGradient::new()
-            .colors(&colors)
-            .domain(&DOMAINS)
-            .build()
-            .unwrap());
+        self.gradient = Some(
+            colorgrad::CustomGradient::new()
+                .colors(&colors)
+                .domain(&DOMAINS)
+                .build()
+                .unwrap(),
+        );
+        true
     }
 
-    pub fn get_pixel(&self, y: u32) -> image::Rgba<u8> {
-        if let Some(grad) = &self.gradient{
+    fn get_pixel(&self, _x: u32, y: u32) -> image::Rgba<u8> {
+        if let Some(grad) = &self.gradient {
             let grad_pos = (y as f64) / (self.config.frame_height as f64);
             let grad_rgba = grad.at(grad_pos).to_rgba8();
             image::Rgba(grad_rgba)
         } else {
-            image::Rgba([0,0,0,0])
+            image::Rgba([0, 0, 0, 0])
         }
     }
 }
