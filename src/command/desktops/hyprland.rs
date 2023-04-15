@@ -1,5 +1,5 @@
-use super::{Desktop, utils::run_command};
-use crate::config::Config;
+use super::Desktop;
+use crate::{config::Config, command::utils::run_command};
 use serde_derive::Deserialize;
 use std::{process::Command, rc::Rc};
 

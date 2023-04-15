@@ -6,10 +6,10 @@ mod consts;
 mod wallpaper;
 
 use chrono::{Local, Timelike};
-use command::CommandRunner;
+use clap::Parser;
+use command::{utils::run_command, CommandRunner};
 use std::{process::exit, rc::Rc, time::Duration};
 use wallpaper::Wallpaper;
-use clap::Parser;
 
 //TODO get from cargo
 const APP_NAME: &str = "circadian_wallpaper";
@@ -26,6 +26,9 @@ struct Args {
 
     #[arg(long)]
     gen_all: Option<String>,
+
+    #[arg(long)]
+    open: bool,
 }
 
 fn main() {
@@ -50,16 +53,27 @@ fn main() {
     let cmd_runner = CommandRunner::new(Rc::clone(&config));
     if let Some(path) = args.gen_all {
         for h in 0..24 {
-            for m in (0..60).step_by(5){
+            for m in (0..60).step_by(5) {
                 let img = wallpaper.gen_wallpaper(h, m);
                 match img {
                     Some(img) => {
-                        img.save(format!("{}/{:0>2}-{:0>2}.png", path, h, m)).unwrap();
+                        img.save(format!("{}/{:0>2}-{:0>2}.png", path, h, m))
+                            .unwrap();
                     }
                     None => {}
                 }
             }
         }
+    } else if args.open {
+        if let Some(arg_hour) = args.hour {
+            hour = arg_hour;
+        }
+        if let Some(arg_min) = args.minute {
+            minute = arg_min;
+        }
+        let img = wallpaper.gen_wallpaper(hour, minute).expect("No image");
+        img.save("/tmp/wallpaper.png").unwrap();
+        run_command("imv /tmp/wallpaper.png".to_string()).expect("Cannot open image");
     } else if config.exec_loop {
         loop {
             let img = wallpaper.gen_wallpaper(hour, minute);

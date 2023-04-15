@@ -1,4 +1,5 @@
-use super::{Desktop, utils::run_command};
+use crate::command::utils::run_command;
+use super::Desktop;
 
 pub struct Custom {
     command: String,
