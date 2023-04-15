@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod command;
 mod config;
 mod consts;
