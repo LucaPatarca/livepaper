@@ -1,6 +1,10 @@
 # livepaper
  
  A rust program to dynamically update your wallpaper based on the time of day.
+ | | |
+ |:-------------------------:|:-------------------------:|
+ | <img src="https://github.com/LucaPatarca/livepaper/blob/master/images/screen1.png?raw=true"/> | <img src="https://github.com/LucaPatarca/livepaper/blob/master/images/screen2.png?raw=true"/> |
+ | <img src="https://github.com/LucaPatarca/livepaper/blob/master/images/screen3.png?raw=true"/> | <img src="https://github.com/LucaPatarca/livepaper/blob/master/images/screen4.png?raw=true"/> |
  
  ### Features
  - **compatible with linux and windows** (macos will probably come soon)
