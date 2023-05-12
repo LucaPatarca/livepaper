@@ -5,8 +5,6 @@ use std::rc::Rc;
 mod custom;
 #[cfg(unix)] mod gnome;
 #[cfg(unix)] mod hyprland;
-mod utils;
-
 #[cfg(windows)] mod windows;
 
 pub trait Desktop {

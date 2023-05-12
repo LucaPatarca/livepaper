@@ -89,4 +89,8 @@ impl Layer for Stars {
             (pixel[3] as f32 * self.opacity) as u8,
         ])
     }
+
+    fn get_type(&self) -> super::LayerType {
+        super::LayerType::DECORATION
+    }
 }

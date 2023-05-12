@@ -128,4 +128,8 @@ impl Layer for Gradient {
             image::Rgba([0, 0, 0, 0])
         }
     }
+
+    fn get_type(&self) -> super::LayerType {
+        super::LayerType::BACKGROUND
+    }
 }

@@ -1,4 +1,5 @@
 mod desktops;
+pub mod utils;
 
 use std::rc::Rc;
 

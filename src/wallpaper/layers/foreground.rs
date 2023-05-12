@@ -36,4 +36,8 @@ impl Layer for Foreground {
     fn get_pixel(&self, x: u32, y: u32) -> image::Rgba<u8> {
         self.buffer.get_pixel(x, y).to_owned()
     }
+
+    fn get_type(&self) -> super::LayerType {
+        super::LayerType::FOREGROUND
+    }
 }
