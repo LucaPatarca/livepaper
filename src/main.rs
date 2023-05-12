@@ -76,12 +76,15 @@ fn main() {
         run_command("imv /tmp/wallpaper.png".to_string()).expect("Cannot open image");
     } else if config.exec_loop {
         loop {
+            let time = Local::now();
+            hour = time.hour() as u8;
+            minute = time.minute() as u8;
             let img = wallpaper.gen_wallpaper(hour, minute);
             match img {
                 Some(img) => {
                     img.save(&config.save_path).unwrap();
                     cmd_runner.change_wallpaper();
-                }
+                },
                 None => {}
             }
             std::thread::sleep(Duration::from_secs(config.update_mins * 60));
