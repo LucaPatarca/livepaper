@@ -121,22 +121,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "circadian_wallpaper"
-version = "0.2.0"
-dependencies = [
- "chrono",
- "clap",
- "colorgrad",
- "confy",
- "image",
- "rand",
- "serde",
- "serde_derive",
- "serde_json",
- "winapi",
-]
-
-[[package]]
 name = "clap"
 version = "4.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -614,6 +598,22 @@ name = "linux-raw-sys"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d59d8c75012853d2e872fb56bc8a2e53718e2cafe1a4c823143141c6d90c322f"
+
+[[package]]
+name = "livepaper"
+version = "0.2.1"
+dependencies = [
+ "chrono",
+ "clap",
+ "colorgrad",
+ "confy",
+ "image",
+ "rand",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "winapi",
+]
 
 [[package]]
 name = "lock_api"

@@ -11,8 +11,7 @@ use command::{utils::run_command, CommandRunner};
 use std::{process::exit, rc::Rc, time::Duration};
 use wallpaper::Wallpaper;
 
-//TODO get from cargo
-const APP_NAME: &str = "circadian_wallpaper";
+const APP_NAME: &str = env!("CARGO_PKG_NAME");
 const CONFIG_NAME: &str = "config";
 
 #[derive(Parser, Debug)]

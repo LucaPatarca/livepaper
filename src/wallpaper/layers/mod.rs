@@ -20,9 +20,12 @@ pub trait Layer {
 }
 
 pub fn get_layers(config: Rc<Config>) -> Vec<Box<dyn Layer>> {
-    vec![
+    let mut result: Vec<Box<dyn Layer>> = vec![
         Box::new(Gradient::new(Rc::clone(&config))),
         Box::new(Stars::new(Rc::clone(&config))),
-        Box::new(Foreground::new(Rc::clone(&config))),
-    ]
+    ];
+    if config.foreground_path.is_some() {
+        result.push(Box::new(Foreground::new(Rc::clone(&config))));
+    }
+    result
 }
