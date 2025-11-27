@@ -1,6 +1,8 @@
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 
+use crate::api;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub sunrise_start: f32,
@@ -19,6 +21,28 @@ pub struct Config {
     pub foreground_path: Option<String>,
 
     pub exec_loop: bool,
+    pub use_api: bool,
+
+    pub latitude: Option<f32>,
+    pub longitude: Option<f32>,
+}
+
+impl Config {
+    pub fn get_time_from_api(&mut self) {
+        if !self.use_api {
+            return
+        }
+        let data = api::get_api_data(self.latitude.unwrap_or(0.), self.longitude.unwrap_or(0.));
+        match data {
+            Ok(data) => {
+                self.sunset_start = data.results.sunset.time;
+                self.sunset_end = data.results.last_light.time;
+                self.sunrise_start = data.results.first_light.time;
+                self.sunrise_end = data.results.sunrise.time;
+            },
+            Err(err) => println!("{:?}", err)
+        };
+    }
 }
 
 impl Default for Config {
@@ -46,6 +70,9 @@ impl Default for Config {
             save_path,
             foreground_path: None,
             exec_loop: false,
+            use_api: true,
+            latitude: None,
+            longitude: None,
         }
     }
 }

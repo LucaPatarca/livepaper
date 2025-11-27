@@ -4,6 +4,7 @@ mod command;
 mod config;
 mod consts;
 mod wallpaper;
+mod api;
 
 use chrono::{Local, Timelike};
 use clap::Parser;
@@ -32,7 +33,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let config: config::Config =
+    let mut config: config::Config =
         confy::load(APP_NAME, Some(CONFIG_NAME)).expect("Cannot load config");
     if !config.is_valid() {
         println!(
@@ -43,6 +44,11 @@ fn main() {
                 .to_string_lossy()
         );
         exit(1);
+    }
+    config.get_time_from_api();
+    let res = confy::store(APP_NAME, CONFIG_NAME, &config);
+    if let Err(error) = res {
+        println!("failed to store config: {:?}", error);
     }
     let time = Local::now();
     let mut hour = time.hour() as u8;
